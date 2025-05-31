@@ -120,3 +120,13 @@ class CalculationMethod(Base):
     ghg_protocol_reference = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+# Backward compatibility - simple Emission class
+class Emission(Base):
+    __tablename__ = "emissions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    source = Column(String, index=True)
+    value = Column(Float)
+    unit = Column(String)
+    timestamp = Column(DateTime, server_default=func.now())
