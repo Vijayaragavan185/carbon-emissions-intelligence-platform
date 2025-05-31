@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, func, Text, Enum, JSON
 from sqlalchemy.orm import relationship, declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship, declarative_base, backref
+
 from datetime import datetime
 import enum
 
@@ -24,13 +26,15 @@ class Company(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    children = relationship('Company', backref='parent', remote_side=[id])
+    # Fixed relationships
+    parent = relationship('Company', remote_side=[id], back_populates='children')
+    children = relationship('Company', back_populates='parent')
     emission_records = relationship('EmissionRecord', back_populates='company')
     
     @hybrid_property
     def total_emissions(self):
         return sum(record.calculated_emission for record in self.emission_records)
+
 
 class EmissionFactor(Base):
     __tablename__ = 'emission_factors'

@@ -1,7 +1,6 @@
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from sqlalchemy.orm import Session
-from app.db.models.emissions import EmissionRecord, EmissionFactor, ScopeEnum
-import math
+from app.db.models.emissions import EmissionFactor, ScopeEnum
 
 class GHGCalculationEngine:
     """GHG Protocol compliant calculation engine for carbon emissions"""
@@ -15,10 +14,7 @@ class GHGCalculationEngine:
         emission_factor: float,
         uncertainty: Optional[float] = None
     ) -> Dict[str, float]:
-        """
-        Calculate emissions using GHG Protocol methodology
-        Returns: {'emission': value, 'uncertainty_range': (min, max)}
-        """
+        """Calculate emissions using GHG Protocol methodology"""
         if activity_amount < 0:
             raise ValueError("Activity amount must be non-negative")
         if emission_factor <= 0:
@@ -41,10 +37,7 @@ class GHGCalculationEngine:
         self, 
         fuel_data: List[Dict]
     ) -> Dict[str, float]:
-        """
-        Calculate Scope 1 emissions from fuel combustion
-        fuel_data: [{'fuel_type': str, 'amount': float, 'unit': str}]
-        """
+        """Calculate Scope 1 emissions from fuel combustion"""
         total_emissions = 0.0
         calculations = []
         
@@ -89,30 +82,6 @@ class GHGCalculationEngine:
             factor.factor_value,
             factor.uncertainty
         )
-    
-    def validate_data_quality(
-        self, 
-        emission_record: EmissionRecord
-    ) -> Tuple[bool, List[str]]:
-        """Validate emission data quality according to GHG Protocol"""
-        issues = []
-        
-        # Check data completeness
-        if not emission_record.activity_amount:
-            issues.append("Missing activity amount")
-        
-        if not emission_record.emission_factor_id:
-            issues.append("Missing emission factor")
-            
-        # Check data reasonableness
-        if emission_record.activity_amount > 10**6:  # Very large values
-            issues.append("Activity amount seems unusually large")
-            
-        # Check temporal consistency
-        if emission_record.reporting_period_start >= emission_record.reporting_period_end:
-            issues.append("Invalid reporting period")
-            
-        return len(issues) == 0, issues
     
     def _get_emission_factor(
         self, 

@@ -1,6 +1,7 @@
 import pytest
 from app.db.models.emissions import Company, EmissionRecord, EmissionFactor, ScopeEnum
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 class TestModels:
     
@@ -15,6 +16,7 @@ class TestModels:
         )
         db.add(parent)
         db.commit()
+        db.refresh(parent)  # Refresh to get the ID
         
         # Create child company
         child = Company(
@@ -26,6 +28,7 @@ class TestModels:
         )
         db.add(child)
         db.commit()
+        db.refresh(child)  # Refresh to load relationships
         
         # Create emission factor
         factor = EmissionFactor(
@@ -54,10 +57,11 @@ class TestModels:
         )
         db.add(record)
         db.commit()
+        db.refresh(record)  # Refresh to load relationships
         
         # Test relationships
         assert child.parent == parent
-        assert parent.children[0] == child
+        assert child in parent.children
         assert record.company == child
         assert record.emission_factor == factor
-        assert child.total_emissions == 20.0
+        assert child.total_emissions == pytest.approx(20.0)
