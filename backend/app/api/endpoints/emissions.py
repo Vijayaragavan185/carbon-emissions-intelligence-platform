@@ -8,7 +8,8 @@ router = APIRouter()
 
 @router.post("/emissions/", response_model=EmissionRead)
 def create_emission(emission: EmissionCreate, db: Session = Depends(get_db)):
-    db_emission = Emission(**emission.dict())
+    db_emission = Emission(**emission.model_dump())
+
     db.add(db_emission)
     db.commit()
     db.refresh(db_emission)
