@@ -6,3 +6,12 @@ class Settings(BaseSettings):
     debug: bool = False
 
 settings = Settings()
+# Add these to your existing config.py
+EPA_API_KEY: str = None
+DEFRA_API_KEY: str = None
+
+# If using environment variables
+import os
+
+EPA_API_KEY = os.getenv("EPA_API_KEY")
+DEFRA_API_KEY = os.getenv("DEFRA_API_KEY")
