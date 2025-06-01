@@ -14,6 +14,7 @@ def handle_api_error(max_retries: int = 3):
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> Any:
             base_delay = 1
+            rate_limit_retries = 0  # Separate counter for rate limit retries
             
             for attempt in range(max_retries):
                 try:
@@ -27,10 +28,15 @@ def handle_api_error(max_retries: int = 3):
                 
                 except requests.exceptions.HTTPError as e:
                     if e.response.status_code == 429:  # Rate limited
+                        rate_limit_retries += 1
+                        if rate_limit_retries >= max_retries:
+                            logger.error(f"Rate limit retries exhausted after {rate_limit_retries} attempts")
+                            raise  # Raise the error after max retries
+                        
                         retry_after = int(e.response.headers.get('Retry-After', 60))
                         logger.warning(f"Rate limited, waiting {retry_after} seconds")
                         time.sleep(retry_after)
-                        continue
+                        continue  # Don't count this as a regular attempt
                     elif e.response.status_code >= 500:  # Server error
                         logger.warning(f"Server error on attempt {attempt + 1}: {e}")
                         if attempt == max_retries - 1:

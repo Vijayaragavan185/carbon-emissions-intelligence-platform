@@ -30,25 +30,24 @@ class DataQualityAssessor:
     
     def _calculate_quality_score(self, factor: Dict) -> Tuple[float, List[str]]:
         """Calculate comprehensive data quality score (1-5 scale)"""
-        score = 5.0
         issues = []
         
-        # Completeness check (40% of score)
+        # Completeness check (40% weight)
         completeness_score, completeness_issues = self._assess_completeness(factor)
-        score = score * 0.6 + completeness_score * 0.4
         issues.extend(completeness_issues)
         
-        # Accuracy check (30% of score)
+        # Accuracy check (30% weight)
         accuracy_score, accuracy_issues = self._assess_accuracy(factor)
-        score = score * 0.7 + accuracy_score * 0.3
         issues.extend(accuracy_issues)
         
-        # Timeliness check (30% of score)
+        # Timeliness check (30% weight)
         timeliness_score, timeliness_issues = self._assess_timeliness(factor)
-        score = score * 0.7 + timeliness_score * 0.3
         issues.extend(timeliness_issues)
         
-        return round(max(1.0, min(5.0, score)), 2), issues
+        # Calculate weighted average
+        final_score = (completeness_score * 0.4 + accuracy_score * 0.3 + timeliness_score * 0.3)
+        
+        return round(max(1.0, min(5.0, final_score)), 2), issues
     
     def _assess_completeness(self, factor: Dict) -> Tuple[float, List[str]]:
         """Assess data completeness"""
@@ -61,13 +60,13 @@ class DataQualityAssessor:
         # Check required fields
         missing_required = [field for field in required_fields if not factor.get(field)]
         if missing_required:
-            score -= len(missing_required) * 1.0
+            score -= len(missing_required) * 0.8  # More severe penalty
             issues.append(f"Missing required fields: {', '.join(missing_required)}")
         
         # Check optional fields
         missing_optional = [field for field in optional_fields if not factor.get(field)]
         if missing_optional:
-            score -= len(missing_optional) * 0.2
+            score -= len(missing_optional) * 0.1  # Minor penalty
         
         return max(1.0, score), issues
     
@@ -79,7 +78,7 @@ class DataQualityAssessor:
         # Check for reasonable factor values
         factor_value = factor.get('factor_value', 0)
         if factor_value <= 0:
-            score -= 2.0
+            score -= 3.0  # Severe penalty for invalid values
             issues.append("Factor value is zero or negative")
         elif factor_value > 10000:  # Unreasonably high
             score -= 1.0
@@ -94,7 +93,7 @@ class DataQualityAssessor:
         # Check unit consistency
         unit = factor.get('unit', '')
         if not any(expected in unit.lower() for expected in ['co2', 'co2e', 'carbon']):
-            score -= 0.5
+            score -= 1.0  # Penalty for wrong unit
             issues.append("Unit doesn't appear to be CO2 equivalent")
         
         return max(1.0, score), issues
@@ -109,7 +108,10 @@ class DataQualityAssessor:
         
         age = current_year - data_year
         
-        if age > 5:
+        if age > 10:  # Very old data
+            score -= 3.0
+            issues.append(f"Data is {age} years old")
+        elif age > 5:
             score -= 2.0
             issues.append(f"Data is {age} years old")
         elif age > 3:

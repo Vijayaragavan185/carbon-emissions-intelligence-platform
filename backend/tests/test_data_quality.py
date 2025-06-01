@@ -41,7 +41,7 @@ class TestDataQuality:
         
         score, issues = assessor._calculate_quality_score(low_quality_factor)
         
-        assert score < 3.0
+        assert score < 2.5  # Updated expectation based on actual scoring
         assert len(issues) > 0
     
     def test_quality_assessment_batch(self):
