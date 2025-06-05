@@ -1,7 +1,9 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline, Container, Typography, Paper, Box } from '@mui/material';
+import { CssBaseline } from '@mui/material';
+import { EmissionsDashboard } from './components/EmissionsDashboard'; // Import the full dashboard
+import './index.css';
 
 const theme = createTheme({
   palette: {
@@ -23,33 +25,12 @@ const queryClient = new QueryClient({
   },
 });
 
-// Simple Dashboard Component for now
-const SimpleDashboard: React.FC = () => {
-  return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4, mb: 4 }}>
-        <Paper sx={{ p: 4, textAlign: 'center' }}>
-          <Typography variant="h3" component="h1" gutterBottom color="primary">
-            Carbon Emissions Intelligence Platform
-          </Typography>
-          <Typography variant="h6" color="textSecondary">
-            Dashboard is loading...
-          </Typography>
-          <Typography variant="body1" sx={{ mt: 2 }}>
-            Welcome to your Carbon Emissions tracking dashboard.
-          </Typography>
-        </Paper>
-      </Box>
-    </Container>
-  );
-};
-
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <SimpleDashboard />
+        <EmissionsDashboard /> {/* Use the full dashboard instead of SimpleDashboard */}
       </ThemeProvider>
     </QueryClientProvider>
   );
