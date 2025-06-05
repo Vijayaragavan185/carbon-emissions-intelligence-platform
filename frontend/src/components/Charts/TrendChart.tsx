@@ -111,7 +111,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({
         text: 'Emissions Trend Over Time',
         font: {
           size: 16,
-          weight: 'bold',
+          weight: 'bold' as const, // Fixed: Add 'as const'
         },
       },
       tooltip: {

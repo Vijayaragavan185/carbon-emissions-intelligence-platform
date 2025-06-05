@@ -54,21 +54,24 @@ export const EmissionsDashboard: React.FC = () => {
     realTimeData,
   } = useEmissionsData();
 
-  // WebSocket connection status
-  const { isConnected } = useWebSocket({
-    onConnect: () => {
-      setNotification({
-        message: 'Real-time updates connected',
-        severity: 'success'
-      });
-    },
-    onDisconnect: () => {
-      setNotification({
-        message: 'Real-time updates disconnected',
-        severity: 'warning'
-      });
-    },
-  });
+  // WebSocket connection status - Fixed: pass URL first, then options
+  const { isConnected } = useWebSocket(
+    process.env.REACT_APP_WS_URL,
+    {
+      onConnect: () => {
+        setNotification({
+          message: 'Real-time updates connected',
+          severity: 'success'
+        });
+      },
+      onDisconnect: () => {
+        setNotification({
+          message: 'Real-time updates disconnected',
+          severity: 'warning'
+        });
+      },
+    }
+  );
 
   const handleFormSubmit = async (data: any) => {
     try {
@@ -119,8 +122,8 @@ export const EmissionsDashboard: React.FC = () => {
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Chip
-            label={isConnected() ? 'Live' : 'Offline'}
-            color={isConnected() ? 'success' : 'default'}
+            label={isConnected ? 'Live' : 'Offline'} // Fixed: Remove function call
+            color={isConnected ? 'success' : 'default'} // Fixed: Remove function call
             size="small"
             variant="outlined"
           />
@@ -312,6 +315,7 @@ export const EmissionsDashboard: React.FC = () => {
         <EmissionEntryForm
           companies={mockCompanies}
           onSubmit={handleFormSubmit}
+          onCancel={() => setFormOpen(false)} // Added onCancel prop
           isLoading={isCreating}
         />
       </Dialog>
