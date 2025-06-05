@@ -1,7 +1,9 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import App from './App';
 
 test('renders app', () => {
   render(<App />);
-  expect(screen.getByText(/emissions/i)).toBeInTheDocument(); // Adjust to match your app
+  expect(screen.getByText(/carbon emissions/i)).toBeInTheDocument();
 });
