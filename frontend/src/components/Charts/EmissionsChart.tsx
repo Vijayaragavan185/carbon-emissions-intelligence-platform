@@ -67,47 +67,47 @@ export const EmissionsChart: React.FC<EmissionsChartProps> = ({
     };
   }, [data]);
 
-  const options = {
+    const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        position: isMobile ? 'bottom' : 'right' as const,
+        legend: {
+        position: isMobile ? 'bottom' as const : 'right' as const,
         labels: {
-          usePointStyle: true,
-          padding: 20,
+            usePointStyle: true,
+            padding: 20,
         },
-      },
-      title: {
+        },
+        title: {
         display: true,
         text: 'Emissions by Scope',
         font: {
-          size: 16,
-          weight: 'bold',
+            size: 16,
+            weight: 'bold' as const, // Add 'as const'
         },
-      },
-      tooltip: {
+        },
+        tooltip: {
         callbacks: {
-          label: (context: any) => {
+            label: (context: any) => {
             const value = context.parsed || context.raw;
             const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
             const percentage = ((value / total) * 100).toFixed(1);
             return `${context.label}: ${value.toLocaleString()} tonnes CO2e (${percentage}%)`;
-          },
+            },
         },
-      },
+        },
     },
     scales: type === 'bar' ? {
-      y: {
+        y: {
         beginAtZero: true,
         ticks: {
-          callback: (value: any) => `${value} tonnes`,
+            callback: (value: any) => `${value} tonnes`,
         },
-      },
+        },
     } : undefined,
-  };
+    };
 
-  return (
+return (
     <Paper elevation={3} sx={{ p: 3, height: height + 100 }}>
       <Box sx={{ height: height, position: 'relative' }}>
         {type === 'bar' ? (

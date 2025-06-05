@@ -9,43 +9,85 @@ export const useEmissionsData = () => {
   const [realTimeData, setRealTimeData] = useState<any>(null);
 
   // WebSocket for real-time updates
-  const { subscribe } = useWebSocket();
+  const { subscribe, isConnected, connectionStatus } = useWebSocket(
+    process.env.REACT_APP_WS_URL,
+    {
+      onConnect: () => {
+        console.log('Connected to emissions WebSocket');
+      },
+      onDisconnect: () => {
+        console.log('Disconnected from emissions WebSocket');
+      },
+      onError: (error) => {
+        console.error('WebSocket error:', error);
+      },
+    }
+  );
 
   useEffect(() => {
-    const unsubscribe = subscribe('emissions_updated', (data) => {
+    const unsubscribeEmissions = subscribe('emissions_updated', (data) => {
       setRealTimeData(data);
-      queryClient.invalidateQueries('emissions');
-      queryClient.invalidateQueries('dashboard');
+      queryClient.invalidateQueries(['emissions']);
+      queryClient.invalidateQueries(['dashboard']);
     });
 
-    return unsubscribe;
+    const unsubscribeDashboard = subscribe('dashboard_update', (data) => {
+      queryClient.invalidateQueries(['dashboard']);
+    });
+
+    const unsubscribeDataQuality = subscribe('data_quality_alert', (data) => {
+      console.log('Data quality alert received:', data);
+      // Handle data quality alerts
+    });
+
+    return () => {
+      unsubscribeEmissions();
+      unsubscribeDashboard();
+      unsubscribeDataQuality();
+    };
   }, [subscribe, queryClient]);
 
   // Queries
   const {
     data: emissions,
     isLoading: emissionsLoading,
-    error: emissionsError
-  } = useQuery<EmissionRecord[]>('emissions', 
-    () => emissionsAPI.getAllEmissions().then(res => res.data)
+    error: emissionsError,
+    refetch: refetchEmissions
+  } = useQuery<EmissionRecord[]>(
+    ['emissions'],
+    () => emissionsAPI.getAllEmissions().then(res => res.data),
+    {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    }
   );
 
   const {
     data: dashboardData,
     isLoading: dashboardLoading,
-    error: dashboardError
-  } = useQuery<DashboardData>('dashboard',
+    error: dashboardError,
+    refetch: refetchDashboard
+  } = useQuery<DashboardData>(
+    ['dashboard'],
     () => emissionsAPI.getDashboardData().then(res => res.data),
-    { refetchInterval: 30000 } // Refetch every 30 seconds
+    {
+      refetchInterval: 30000, // Refetch every 30 seconds
+      staleTime: 1 * 60 * 1000, // 1 minute
+      refetchOnWindowFocus: false,
+    }
   );
 
   // Mutations
   const createEmissionMutation = useMutation(
     (data: FormData) => emissionsAPI.createEmission(data),
     {
-      onSuccess: () => {
-        queryClient.invalidateQueries('emissions');
-        queryClient.invalidateQueries('dashboard');
+      onSuccess: (data) => {
+        queryClient.invalidateQueries(['emissions']);
+        queryClient.invalidateQueries(['dashboard']);
+        console.log('Emission created successfully:', data);
+      },
+      onError: (error) => {
+        console.error('Failed to create emission:', error);
       }
     }
   );
@@ -55,8 +97,11 @@ export const useEmissionsData = () => {
       emissionsAPI.updateEmission(id, data),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries('emissions');
-        queryClient.invalidateQueries('dashboard');
+        queryClient.invalidateQueries(['emissions']);
+        queryClient.invalidateQueries(['dashboard']);
+      },
+      onError: (error) => {
+        console.error('Failed to update emission:', error);
       }
     }
   );
@@ -65,24 +110,32 @@ export const useEmissionsData = () => {
     (id: number) => emissionsAPI.deleteEmission(id),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries('emissions');
-        queryClient.invalidateQueries('dashboard');
+        queryClient.invalidateQueries(['emissions']);
+        queryClient.invalidateQueries(['dashboard']);
+      },
+      onError: (error) => {
+        console.error('Failed to delete emission:', error);
       }
     }
   );
 
   // Helper functions
   const createEmission = useCallback((data: FormData) => {
-    return createEmissionMutation.mutate(data);
+    return createEmissionMutation.mutateAsync(data);
   }, [createEmissionMutation]);
 
   const updateEmission = useCallback((id: number, data: Partial<FormData>) => {
-    return updateEmissionMutation.mutate({ id, data });
+    return updateEmissionMutation.mutateAsync({ id, data });
   }, [updateEmissionMutation]);
 
   const deleteEmission = useCallback((id: number) => {
-    return deleteEmissionMutation.mutate(id);
+    return deleteEmissionMutation.mutateAsync(id);
   }, [deleteEmissionMutation]);
+
+  const refreshData = useCallback(() => {
+    refetchEmissions();
+    refetchDashboard();
+  }, [refetchEmissions, refetchDashboard]);
 
   return {
     // Data
@@ -98,6 +151,10 @@ export const useEmissionsData = () => {
     emissionsError,
     dashboardError,
     
+    // WebSocket status
+    isConnected,
+    connectionStatus,
+    
     // Mutations
     createEmission,
     updateEmission,
@@ -107,5 +164,10 @@ export const useEmissionsData = () => {
     isCreating: createEmissionMutation.isLoading,
     isUpdating: updateEmissionMutation.isLoading,
     isDeleting: deleteEmissionMutation.isLoading,
+    
+    // Utility functions
+    refreshData,
   };
 };
+
+export default useEmissionsData;
