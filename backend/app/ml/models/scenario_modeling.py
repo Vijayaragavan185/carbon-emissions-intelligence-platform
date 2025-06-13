@@ -81,24 +81,24 @@ class CarbonScenarioModeler:
             logger.error(f"Error creating intervention scenario: {e}")
             raise
     def _project_target_scenario(self, scenario: Dict) -> Dict:
-    """Project emissions for target-based scenario"""
-    try:
-        # Use the intervention scenario projection with recommended interventions
-        temp_scenario = {
-            'parameters': scenario['parameters'],
-            'timeline_years': scenario['timeline_years'],
-            'interventions': scenario.get('recommended_interventions', [])
-        }
-        
-        # Project using existing intervention method
-        projections = self._project_emissions_with_interventions(temp_scenario)
-        
-        return projections
-        
-    except Exception as e:
-        logger.error(f"Error projecting target scenario: {e}")
-        # Fallback to baseline projection
-        return self._project_emissions(scenario)
+        """Project emissions for target-based scenario"""
+        try:
+            # Use the intervention scenario projection with recommended interventions
+            temp_scenario = {
+                'parameters': scenario['parameters'],
+                'timeline_years': scenario['timeline_years'],
+                'interventions': scenario.get('recommended_interventions', [])
+            }
+            
+            # Project using existing intervention method
+            projections = self._project_emissions_with_interventions(temp_scenario)
+            
+            return projections
+            
+        except Exception as e:
+            logger.error(f"Error projecting target scenario: {e}")
+            # Fallback to baseline projection
+            return self._project_emissions(scenario)
 
     def create_target_scenario(
         self,

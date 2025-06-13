@@ -30,6 +30,7 @@ class EmissionAnomalyDetector:
                 
             # Time-based features
             if 'date' in emission_data.columns:
+                emission_data = emission_data.copy()  # Make explicit copy first
                 emission_data['date'] = pd.to_datetime(emission_data['date'])
                 features['day_of_week'] = emission_data['date'].dt.dayofweek
                 features['month'] = emission_data['date'].dt.month
