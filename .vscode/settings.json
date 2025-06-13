@@ -1,0 +1,41 @@
+{
+  "workbench.colorTheme": "Mermaid Light",
+  "python.defaultInterpreterPath": "C:\\Users\\Vijayaragavan\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+  "git.autofetch": false,
+  "git.autorefresh": true,
+  "editor.stickyScroll.enabled": false,
+  "sqldeveloper.sqlHistory.historyLimit": 500,
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "sqldeveloper.telemetry.enabled": true,
+  "github.copilot.enable": {
+    "*": false,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false,
+    "python": false
+  },
+  "database-client.autoSync": true,
+  "files.useExperimentalFileWatcher": true,
+  "typescript.preferences.includePackageJsonAutoImports": "off",
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/__pycache__/**": true,
+    "**/venv/**": true,
+    "**/env/**": true,
+    "**/.pytest_cache/**": true,
+    "**/coverage/**": true,
+    "**/*.log": true,
+    "**/validation_reports/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/venv": true,
+    "**/.git": true,
+    "**/dist": true,
+    "**/build": true
+  }
+}
