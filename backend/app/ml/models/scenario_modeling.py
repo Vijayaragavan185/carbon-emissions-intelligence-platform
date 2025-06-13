@@ -223,7 +223,7 @@ class CarbonScenarioModeler:
                     'start_year': intervention.get('start_year', datetime.now().year + 1),
                     'implementation_duration': intervention.get('implementation_duration', 1),
                     'annual_reduction': intervention.get('annual_reduction', 0),
-                    'one_time_reduction': intervention.get('one_time_reduction', 0),
+                    'one_time_reduction': intervention.get('one_time_reduction', 0),  # ← Ensure this exists
                     'cost': intervention.get('cost', 0),
                     'annual_savings': intervention.get('annual_savings', 0),
                     'effectiveness_decay': intervention.get('effectiveness_decay', 0),
@@ -617,6 +617,75 @@ class CarbonScenarioModeler:
         except Exception as e:
             logger.error(f"Error comparing scenarios: {e}")
             raise
+    def _analyze_target_feasibility(self, scenario: Dict) -> Dict:
+        """Analyze feasibility of achieving target reduction"""
+        try:
+            target_reduction = scenario.get('target_reduction', 0)
+            target_year = scenario.get('target_year', 2030)
+            recommended_interventions = scenario.get('recommended_interventions', [])
+            
+            # Calculate total potential reduction from recommended interventions
+            total_potential_reduction = sum(
+                intervention.get('annual_reduction', 0) 
+                for intervention in recommended_interventions
+            )
+            
+            # Calculate total cost
+            total_cost = sum(
+                intervention.get('cost', 0) 
+                for intervention in recommended_interventions
+            )
+            
+            # Feasibility analysis
+            feasibility_score = min(total_potential_reduction / target_reduction, 1.0) if target_reduction > 0 else 0
+            
+            # Risk assessment
+            implementation_complexity = np.mean([
+                intervention.get('implementation_duration', 1) 
+                for intervention in recommended_interventions
+            ]) if recommended_interventions else 0
+            
+            risk_level = 'low' if feasibility_score > 0.8 and implementation_complexity < 2 else \
+                        'medium' if feasibility_score > 0.5 else 'high'
+            
+            return {
+                'feasibility_score': float(feasibility_score),
+                'is_achievable': feasibility_score >= 0.8,
+                'total_potential_reduction': float(total_potential_reduction),
+                'reduction_gap': float(max(0, target_reduction - total_potential_reduction)),
+                'total_cost': float(total_cost),
+                'risk_level': risk_level,
+                'implementation_complexity': float(implementation_complexity),
+                'confidence': 'high' if feasibility_score > 0.9 else 'medium' if feasibility_score > 0.6 else 'low',
+                'recommendations': self._generate_feasibility_recommendations(feasibility_score, target_reduction, total_potential_reduction)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing target feasibility: {e}")
+            return {
+                'feasibility_score': 0.0,
+                'is_achievable': False,
+                'error': str(e)
+            }
+
+    def _generate_feasibility_recommendations(self, feasibility_score: float, target_reduction: float, potential_reduction: float) -> List[str]:
+        """Generate recommendations based on feasibility analysis"""
+        recommendations = []
+        
+        if feasibility_score >= 0.9:
+            recommendations.append("Target is highly achievable with current intervention portfolio")
+        elif feasibility_score >= 0.7:
+            recommendations.append("Target is achievable but may require optimization of implementation timeline")
+        elif feasibility_score >= 0.5:
+            recommendations.append("Target is challenging - consider additional interventions or extending timeline")
+            if target_reduction - potential_reduction > 0.1:
+                recommendations.append(f"Consider additional interventions to close {(target_reduction - potential_reduction)*100:.1f}% reduction gap")
+        else:
+            recommendations.append("Target may not be achievable with current approach - significant changes needed")
+            recommendations.append("Consider revising target reduction percentage or extending timeline")
+        
+        return recommendations
+
     
     def _analyze_trade_offs(self, metrics: Dict) -> List[str]:
         """Analyze trade-offs between scenarios"""

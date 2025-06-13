@@ -41,7 +41,7 @@ class EmissionForecaster:
             emission_data.sort_index(inplace=True)
             
             # Handle missing values
-            emission_data = emission_data.fillna(method='ffill').fillna(method='bfill')
+            emission_data = emission_data.ffill().bfill()
             
             # Aggregate daily data if needed
             if 'emissions' in emission_data.columns:
