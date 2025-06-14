@@ -1,0 +1,4 @@
+pytest tests/test_ml_models.py -v
+pytest tests/test_predictions.py::test_forecast_accuracy -v
+python scripts/validate_models.py
+pytest tests/test_model_performance.py -v
