@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, Boolean, ForeignKey, Enum
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 import enum
 
-Base = declarative_base()
+# Import Base from your existing database setup
+from ...db.database import Base
 
 class ReportStatus(enum.Enum):
     DRAFT = "draft"
@@ -38,10 +38,10 @@ class ESGReport(Base):
     completeness_percentage = Column(Integer)  # 0-100
     
     # Audit trail
-    created_by = Column(Integer, ForeignKey("users.id"))
+    created_by = Column(Integer)  # Would be ForeignKey to users table
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    approved_by = Column(Integer, ForeignKey("users.id"))
+    approved_by = Column(Integer)  # Would be ForeignKey to users table
     approved_at = Column(DateTime)
     published_at = Column(DateTime)
     
@@ -49,8 +49,8 @@ class ESGReport(Base):
     pdf_file_path = Column(String(500))
     xml_file_path = Column(String(500))
     
-    # Relationships
-    company = relationship("Company")
+    # Relationships (using your existing Company model)
+    # company = relationship("Company")
     audit_logs = relationship("ESGAuditLog", back_populates="report")
     approvals = relationship("ESGApproval", back_populates="report")
 
@@ -59,8 +59,8 @@ class ESGAuditLog(Base):
     
     id = Column(Integer, primary_key=True)
     report_id = Column(Integer, ForeignKey("esg_reports.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    action = Column(String(100), nullable=False)  # created, updated, submitted, approved, etc.
+    user_id = Column(Integer, nullable=False)
+    action = Column(String(100), nullable=False)
     old_values = Column(JSON)
     new_values = Column(JSON)
     timestamp = Column(DateTime, default=datetime.utcnow)
@@ -75,23 +75,11 @@ class ESGApproval(Base):
     
     id = Column(Integer, primary_key=True)
     report_id = Column(Integer, ForeignKey("esg_reports.id"), nullable=False)
-    approver_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    approval_level = Column(Integer, nullable=False)  # 1, 2, 3 for multi-level approval
-    status = Column(String(20), default="pending")  # pending, approved, rejected
+    approver_id = Column(Integer, nullable=False)
+    approval_level = Column(Integer, nullable=False)
+    status = Column(String(20), default="pending")
     comments = Column(Text)
     approved_at = Column(DateTime)
     
     # Relationships
     report = relationship("ESGReport", back_populates="approvals")
-
-class ComplianceRequirement(Base):
-    __tablename__ = "compliance_requirements"
-    
-    id = Column(Integer, primary_key=True)
-    framework = Column(Enum(ComplianceFramework), nullable=False)
-    requirement_id = Column(String(50), nullable=False)  # e.g., "CDP_C1.1"
-    requirement_title = Column(String(255), nullable=False)
-    requirement_description = Column(Text)
-    is_mandatory = Column(Boolean, default=True)
-    data_points_required = Column(JSON)  # List of required data points
-    validation_rules = Column(JSON)  # Validation rules for the requirement
