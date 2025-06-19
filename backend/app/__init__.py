@@ -6,3 +6,12 @@ app = FastAPI()
 app.include_router(emissions.router, prefix="/api/v1")
 
 Base.metadata.create_all(bind=engine)
+"""
+Carbon Emissions Intelligence Platform
+Main application package
+"""
+
+__version__ = "1.0.0"
+__author__ = "Carbon Emissions Intelligence Team"
+
+# Don't import endpoints here to avoid circular imports

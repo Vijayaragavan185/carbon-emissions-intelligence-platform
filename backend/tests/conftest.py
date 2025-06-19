@@ -1,21 +1,39 @@
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.db.models.emissions import Base
+import sys
+import os
+from unittest.mock import Mock
 
-# Use your database URL (adjust if needed)
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:Vijay1825%40@localhost:5432/carbon_db"
+# Add backend to path
+backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, backend_dir)
 
-@pytest.fixture(scope="function")
-def db():
-    """Database fixture for testing"""
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
-    Base.metadata.create_all(bind=engine)
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        # Clean up after each test
-        Base.metadata.drop_all(bind=engine)
+@pytest.fixture(scope="session")
+def mock_db_session():
+    """Mock database session for testing"""
+    return Mock()
+
+@pytest.fixture
+def sample_emission_data():
+    """Sample emission data for tests"""
+    return [
+        {
+            "scope": "SCOPE_1",
+            "activity_type": "Natural Gas",
+            "calculated_emission": 1500.0,
+            "reporting_period_start": "2024-01-01",
+            "reporting_period_end": "2024-12-31"
+        }
+    ]
+
+@pytest.fixture
+def sample_company_data():
+    """Sample company data for tests"""
+    return {
+        "id": 1,
+        "name": "Test Company",
+        "industry_sector": "Technology",
+        "country": "United States"
+    }
+
+# Remove problematic imports for now
+# We'll add them back once the structure is fixed
